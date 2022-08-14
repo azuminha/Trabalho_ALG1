@@ -2,9 +2,10 @@
 #include <ncurses.h>
 #include <string.h>
 #define tam 50
+#define altura 12
 
 void bubble_sort(int array[tam], int col);
-void create_matrix( int matrix[tam][tam], int x, int y );
+void create_matrix( int matrix[tam][tam], int x, int y);
 void matrixcpy( int matrixcpy[tam][tam], int matrix[tam][tam], int x, int y );
 void show_matrix( int matrix[tam][tam], int x, int y );
 void change_lines( int matrix[tam][tam], int col, int linx, int liny );
@@ -16,9 +17,17 @@ int is_magic_square( int matrix[tam][tam], int lin, int col );
 int is_latin_square( int matrix[tam][tam], int lin, int col );
 int is_permut_matrix(int matrix[tam][tam], int lin, int col);
 
+void clear_matrixwin(int startY, int startX, int maxY, int maxX);
+void show_matrix_win2( int matrix[tam][tam], int x, int y);
+
+int yMax, xMax;
+int startX, startY;
+
 int main(){
   int matrix[tam][tam], new_matrix[tam][tam];
-  int lin, col;
+  int lin, col, lin1, lin2;
+
+
   /*  printf("linha: coluna:\n");
   scanf("%d %d", &lin, &col);
   create_matrix(matrix, lin, col);
@@ -30,7 +39,7 @@ int main(){
   noecho();
   cbreak();
 
-  const char * menu_itens[8] = {
+  const char * menu_itens[9] = {
   "Ler Matriz",
   "Trocar elementos da linha X pela linha Y",
   "Trocar elementos da coluna X pela coluna Y",
@@ -38,10 +47,11 @@ int main(){
   "Verificar se a matriz e simetrica",
   "Verificar se a matriz e um quadrado magico",
   "Verificar se a matriz e quadrado latino",
-  "Verificar se a matriz e matriz de permutacao"};
-  int altura = 11;
-  int startX, startY;
-  int yMax, xMax;
+  "Verificar se a matriz e matriz de permutacao",
+  "Sair"};
+  
+  int matrixwinY, matrixwinX;
+  int mwinyMax, mwinxMax;
   
   getmaxyx(stdscr, yMax, xMax);
   getbegyx(stdscr, startY, startX);
@@ -49,6 +59,9 @@ int main(){
   WINDOW * menuwin   = newwin(altura, xMax, startY, startX);
   WINDOW * matrixwin = newwin(yMax-altura, xMax/2, startY+altura, startX); 
   WINDOW * showwin   = newwin(yMax-altura, xMax/2, startY+altura, startX+xMax/2);
+  
+  getmaxyx(matrixwin, mwinyMax, mwinxMax);
+  getbegyx(matrixwin, matrixwinY, matrixwinX);
   
   box(menuwin, 0, 0);
   box(matrixwin, 0, 0);
@@ -67,8 +80,12 @@ int main(){
   keypad(menuwin, TRUE);
   int seta;
   int mark=0;
+  int tem_matriz=0;
+  //do{
+  comeco:
+  matrixcpy(matrix, new_matrix, lin, col); 
   while(1){
-    for(int i = 0; i<8; ++i){
+    for(int i = 0; i<9; ++i){
       if(i==mark)
         wattron(menuwin, A_REVERSE);
       mvwprintw(menuwin, i+2, 1, menu_itens[i]);
@@ -78,29 +95,150 @@ int main(){
 
     switch(seta){
       case KEY_UP:
-        mark--;
+        mark--; 
+            
         if(mark < 0)
-          mark = 0;
+          mark = 8;
         break;
+
       case KEY_DOWN:
-        mark++;
-        if (mark >=8)
-          mark = 7;       
+        mark++; 
+       
+        if (mark >=9)
+          mark = 0;     
         break;
+
       default:
         break;
     }
-    mvwprintw(matrixwin, 2, 1, menu_itens[mark]);
-    refresh();
-  wrefresh(menuwin);
-  wrefresh(matrixwin);
-  wrefresh(showwin);
-    if (seta==10)
+    if (mark==0)
+      tem_matriz=1;
+    
+    if (seta==10 && tem_matriz || mark==8 && seta==10)
       break;
+    
   }
+
+
+
+  if(mark==0){  
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+      mvprintw(startY+altura+1,startX+1, "Digite quantas linhas e colunas a matriz tera, e pressione enter: ");
+      refresh();
+      scanf("%d", &lin);
+      mvprintw(startY+altura+2,startX+1,"Linhas: %d", lin);
+      refresh();
+      scanf("%d", &col);
+      mvprintw(startY+altura+3,startX+1,"Colunas: %d", col);
+      refresh();
+      mvprintw(startY+altura+4,startX+1,"Pressione uma tecla para continuar...");
+      getch();
+      clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+      create_matrix(matrix, lin, col);    
+      matrixcpy(new_matrix, matrix, lin, col);    
+  }
+  if(mark==1){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    mvprintw(startY+altura+1,startX+1, "Digite o valor das linhas e clique enter");
+    refresh();
+    scanf("%d", &lin1);
+    mvprintw(startY+altura+2,startX+1,"Linha: %d", lin1);
+    refresh();
+    scanf("%d", &lin2);
+    mvprintw(startY+altura+3,startX+1,"Linha: %d", lin2);
+    refresh();
+    mvprintw(startY+altura+4,startX+1,"Pressione uma tecla para continuar...");
+    getch();
+    change_lines(matrix, col, lin1, lin2);
+    show_matrix(matrix, lin, col);
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    show_matrix_win2(new_matrix, lin, col);
+  }
+ 
+  if(mark==2){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    mvprintw(startY+altura+1,startX+1, "Digite o valor das colunas e clique enter");
+    refresh();
+    scanf("%d", &lin1);
+    mvprintw(startY+altura+2,startX+1,"Linha: %d", lin1);
+    refresh();
+    scanf("%d", &lin2);
+    mvprintw(startY+altura+3,startX+1,"Linha: %d", lin2);
+    refresh();
+    mvprintw(startY+altura+4,startX+1,"Pressione uma tecla para continuar...");
+    getch();
+    change_colums(matrix, col, lin1, lin2);
+    show_matrix(matrix, lin, col);
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    show_matrix_win2(new_matrix, lin, col);
+  }
+ 
+  if(mark==3){
+    
+    change_diag(matrix, lin, col);
+    show_matrix(matrix, lin, col);
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    show_matrix_win2(new_matrix, lin, col);
+  }
+  if(mark==4){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    
+    if(is_sym_matrix(matrix, lin, col)){
+      mvprintw(yMax/2+6,xMax/4-11,"E uma matriz simetrica");
+      refresh();
+    }else{
+      mvprintw(yMax/2+6,xMax/4-13,"Nao e uma matriz simetrica");
+      refresh();
+    }
+  }
+   if(mark==5){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    
+    if(is_magic_square(matrix, lin, col)){
+      mvprintw(yMax/2+6,xMax/4-10,"E um quadrado magico");
+      refresh();
+    }else{
+      mvprintw(yMax/2+6,xMax/4-12,"Nao e um quadrado magico");
+      refresh();
+    }
+  }
+  if(mark==6){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    
+    if(is_latin_square(matrix, lin, col)){
+      mvprintw(yMax/2+6,xMax/4-10,"E um quadrado latino");
+      refresh();
+    }else{
+      mvprintw(yMax/2+6,xMax/4-12,"Nao e um quadrado latino");
+      refresh();
+    }
+  }
+  if(mark==7){
+    clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+    
+    if(is_permut_matrix(matrix, lin, col)){
+      mvprintw(yMax/2+6,xMax/4-12,"E uma matriz permutacao");
+      refresh();
+    }else{
+      mvprintw(yMax/2+6,xMax/4-14,"Nao e uma matriz permutacao");
+      refresh();
+    }
+  }
+
+  if(mark==8)
+    goto sair;
+  goto comeco;
+  sair:
+  //}while(mark != 8);
+
+  //create_matrix(matrix, 3, 3);
+  //getch();
+  //clear_matrixwin(startY+altura, startX,yMax-altura, xMax/2);
+  //create_matrix(matrix, 3, 3);
+ 
+ 
+
   
-  
-  getch();
   endwin();
 
   
@@ -277,9 +415,10 @@ void change_lines(int matrix[tam][tam], int col, int linx, int liny){
 void show_matrix( int matrix[tam][tam], int x, int y){
   for( int i=0; i<x; ++i){
     for( int j=0; j<y; ++j){
-      printf("%d ", matrix[i][j]);
+      mvprintw(startY+altura+1+i, startX+xMax/2+1+5*j,"%d", matrix[i][j]);
+      refresh();
     }
-    printf("\n");
+    //printf("\n");
   }
 }
 
@@ -294,8 +433,29 @@ void matrixcpy(int matrixcpy[tam][tam], int matrix[tam][tam], int x, int y ){
 void create_matrix(int matrix[tam][tam], int x, int y){
   for (int i=0; i<x; ++i){
     for (int j=0; j<y; ++j){
+      mvprintw(startY+altura+1,startX+1, "Digite os numeros e pressione espaco ou enter:");
+      refresh();
       scanf("%d", &matrix[i][j]);
+      mvprintw(startY+altura+2+i,startX+1+5*j,"%d", matrix[i][j]);
+      refresh();
     }
   }
 }
 
+void clear_matrixwin(int startY, int startX, int maxY, int maxX){
+  for(int i=startY+1; i<maxY; i++){
+    for(int j=startX+1; j<maxX-1; ++j){
+      mvprintw(i, j, " ");
+    }
+  }
+}
+
+void show_matrix_win2( int matrix[tam][tam], int x, int y){
+  for( int i=0; i<x; ++i){
+    for( int j=0; j<y; ++j){
+      mvprintw(startY+altura+2+i,startX+1+5*j,"%d", matrix[i][j]);
+      refresh();
+    }
+    //printf("\n");
+  }
+}
