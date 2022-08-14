@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <ncurses.h>
+#include <string.h>
 #define tam 50
 
 void bubble_sort(int array[tam], int col);
@@ -17,12 +19,90 @@ int is_permut_matrix(int matrix[tam][tam], int lin, int col);
 int main(){
   int matrix[tam][tam], new_matrix[tam][tam];
   int lin, col;
-  printf("linha: coluna:\n");
+  /*  printf("linha: coluna:\n");
   scanf("%d %d", &lin, &col);
   create_matrix(matrix, lin, col);
   matrixcpy(new_matrix, matrix, lin, col);
   printf("%d\n", is_permut_matrix(new_matrix, lin, col));
   show_matrix(new_matrix, lin, col);
+  */
+  initscr();
+  noecho();
+  cbreak();
+
+  const char * menu_itens[8] = {
+  "Ler Matriz",
+  "Trocar elementos da linha X pela linha Y",
+  "Trocar elementos da coluna X pela coluna Y",
+  "Trocar elementos da DP com DS",
+  "Verificar se a matriz e simetrica",
+  "Verificar se a matriz e um quadrado magico",
+  "Verificar se a matriz e quadrado latino",
+  "Verificar se a matriz e matriz de permutacao"};
+  int altura = 11;
+  int startX, startY;
+  int yMax, xMax;
+  
+  getmaxyx(stdscr, yMax, xMax);
+  getbegyx(stdscr, startY, startX);
+  
+  WINDOW * menuwin   = newwin(altura, xMax, startY, startX);
+  WINDOW * matrixwin = newwin(yMax-altura, xMax/2, startY+altura, startX); 
+  WINDOW * showwin   = newwin(yMax-altura, xMax/2, startY+altura, startX+xMax/2);
+  
+  box(menuwin, 0, 0);
+  box(matrixwin, 0, 0);
+  box(showwin, 0, 0);
+
+ 
+  mvwprintw(matrixwin, 0, 1, "Sua-Matriz");
+  mvwprintw(showwin, 0, 1, "Resultado");
+  mvwprintw(menuwin, 0, 1, "Menu");
+
+  refresh();
+  wrefresh(menuwin);
+  wrefresh(matrixwin);
+  wrefresh(showwin);
+
+  keypad(menuwin, TRUE);
+  int seta;
+  int mark=0;
+  while(1){
+    for(int i = 0; i<8; ++i){
+      if(i==mark)
+        wattron(menuwin, A_REVERSE);
+      mvwprintw(menuwin, i+2, 1, menu_itens[i]);
+      wattroff(menuwin, A_REVERSE);
+    }
+    seta = wgetch(menuwin);
+
+    switch(seta){
+      case KEY_UP:
+        mark--;
+        if(mark < 0)
+          mark = 0;
+        break;
+      case KEY_DOWN:
+        mark++;
+        if (mark >=8)
+          mark = 7;       
+        break;
+      default:
+        break;
+    }
+    mvwprintw(matrixwin, 2, 1, menu_itens[mark]);
+    refresh();
+  wrefresh(menuwin);
+  wrefresh(matrixwin);
+  wrefresh(showwin);
+    if (seta==10)
+      break;
+  }
+  
+  
+  getch();
+  endwin();
+
   
   return 0;
 }
